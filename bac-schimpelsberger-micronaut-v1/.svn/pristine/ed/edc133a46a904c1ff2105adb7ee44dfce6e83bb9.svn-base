@@ -1,0 +1,72 @@
+package bac.schimpelsberger.micronaut.entity;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+
+@Embeddable
+public class UserAuthorityId implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8785976263037939735L;
+	
+	@Column(name="user_no")
+	Long userNo;
+	
+	@Column(name="authority_id")
+	String authorityId;
+	
+	public Long getUserNo() {
+		return userNo;
+	}
+	public void setUserNo(Long userNo) {
+		this.userNo = userNo;
+	}
+	public String getAuthorityId() {
+		return authorityId;
+	}
+	public void setAuthorityId(String authorityId) {
+		this.authorityId = authorityId;
+	}
+	public UserAuthorityId(Long userNo, String authorityId) {
+		super();
+		this.userNo = userNo;
+		this.authorityId = authorityId;
+	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((authorityId == null) ? 0 : authorityId.hashCode());
+		result = prime * result + ((userNo == null) ? 0 : userNo.hashCode());
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		UserAuthorityId other = (UserAuthorityId) obj;
+		if (authorityId == null) {
+			if (other.authorityId != null)
+				return false;
+		} else if (!authorityId.equals(other.authorityId))
+			return false;
+		if (userNo == null) {
+			if (other.userNo != null)
+				return false;
+		} else if (!userNo.equals(other.userNo))
+			return false;
+		return true;
+	}
+	
+	
+	
+	
+}

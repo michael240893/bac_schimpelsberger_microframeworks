@@ -1,0 +1,151 @@
+package at.jku.se.bac.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import at.jku.se.bac.dto.AddUserDto;
+import at.jku.se.bac.dto.EditUserDto;
+import at.jku.se.bac.entity.Authority;
+import at.jku.se.bac.entity.User;
+import at.jku.se.bac.service.UserService;
+
+@RestController
+@RequestMapping("/users")
+@PreAuthorize("hasRole('ADMIN')")  
+public class UserController {
+
+	private final Logger log = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+	UserService service;
+	
+	@GetMapping
+	public ResponseEntity<List<User>> getUsers() {
+		log.info("getUsers was called");
+		logAuthentication();
+		List<User>users=service.findAll();
+		return ResponseEntity.ok(users);
+	}
+		
+	
+	@PostMapping
+	public ResponseEntity<User> addUser(@Valid @RequestBody AddUserDto dto) {
+		log.info("addUser was called with AddUserDto: {}",dto);
+		logAuthentication();
+		dto.setEnabled(true);
+		User user=service.registerNewUserAccount(dto);
+		return ResponseEntity.ok(user);
+	}
+	
+	@GetMapping("/{username}")
+	public ResponseEntity<User> getUser(@PathVariable("username") String username) {
+		log.info("getUser was called with username: {}",username);
+		logAuthentication();
+		User user=service.findById(username);
+		if (user!=null) {
+			return ResponseEntity.ok(user);
+		}
+		else throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+	}
+	
+	@DeleteMapping("/{username}")
+	public void deleteUser(@PathVariable("username") String username) {
+		log.info("deleteUser was called with username: {}",username);
+		logAuthentication();
+		service.deleteUser(username);		
+	}
+	
+	@PutMapping("/{username}")
+	public ResponseEntity<User>  updateUser(@PathVariable("username") String username, @Valid @RequestBody EditUserDto dto) {
+		dto.setUsername(username);
+		log.info("updaeUser was called with EditUserDto: {}",dto);
+		logAuthentication();
+		User user=service.updateUserAccount(dto);
+		if (user==null)  throw new ResponseStatusException(HttpStatus.NOT_FOUND,"User not found");
+		return ResponseEntity.ok(user);
+	}
+	
+
+	@GetMapping("/{username}/roles")
+	public ResponseEntity<Set<Authority>>  getUserRoles(@PathVariable("username") String username) {
+		log.info("getUserRoles was called with username: {}",username);
+		logAuthentication();
+		User user=service.findById(username);
+		if (user==null)  throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		return ResponseEntity.ok(user.getAuthorities());
+	}
+	
+	@PostMapping("/{username}/roles")
+	public ResponseEntity<Set<Authority>>  addUserRoles(@PathVariable("username") String username,@RequestBody List<Authority>authorities) {
+		log.info("addUserRoles was called with username: {} for : authorities",username,authorities==null?"NULL":authorities.size());
+		logAuthentication();
+		service.addUserRoles(username, authorities);
+		return ResponseEntity.ok(null);
+	}
+	
+	@DeleteMapping("/{username}/roles")
+	public ResponseEntity<Set<Authority>>  deleteUserRoles(@PathVariable("username") String username,@RequestBody List<Authority>authorities) {
+		log.info("deleteUserRoles was called with username: {} for : authorities",username,authorities==null?"NULL":authorities.size());
+		logAuthentication();
+		service.deleteUserRoles(username, authorities);
+		return ResponseEntity.ok(null);
+	}
+
+	@GetMapping("/{username}/unassignedRoles")
+	public ResponseEntity<List<Authority>>  getUnassignedUserRoles(@PathVariable("username") String username) {
+		log.info("getUserRoles was called with username: {}",username);
+		logAuthentication();
+		User user=service.findById(username);
+		if (user==null)  throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+		List<Authority>unassignedAuthorities=service.findUnassignedAuthorities(username);
+		return ResponseEntity.ok(unassignedAuthorities);
+	}
+
+	@ExceptionHandler({MethodArgumentNotValidException.class })
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+
+        Map<String,String> errors =new HashMap<>();
+       ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .forEach(x -> errors.put(x.getField(), x.getDefaultMessage()));
+
+        return ResponseEntity.badRequest().body(errors);
+    }
+	
+	private void logAuthentication() {
+		Authentication auth=SecurityContextHolder.getContext().getAuthentication();
+		if (auth==null) {
+			log.info("Authentication is null");
+		}
+		else {
+			String name=auth.getName();
+			log.info("Authentication for user: {} has roles: {}",name,auth.getAuthorities().toString());
+		}
+	}
+	
+}

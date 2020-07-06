@@ -1,0 +1,5 @@
+profile: service
+defaultPackage: bac.schimpelsberger.micronaut
+---
+testFramework: junit
+sourceLanguage: java

@@ -1,0 +1,28 @@
+package at.jku.se.bac.validation;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+
+public class PermissionValidator implements ConstraintValidator<ValidPermission, String> {
+    private Pattern pattern;
+    private Matcher matcher;
+    private static final String EMAIL_PATTERN = "^[A-Z0-9]+_?[A-Z0-9]+";
+
+    @Override
+    public void initialize(final ValidPermission constraintAnnotation) {
+    }
+
+    @Override
+    public boolean isValid(final String username, final ConstraintValidatorContext context) {
+        return (validatePermission(username));
+    }
+
+    private boolean validatePermission(final String email) {
+        pattern = Pattern.compile(EMAIL_PATTERN);
+        matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+}

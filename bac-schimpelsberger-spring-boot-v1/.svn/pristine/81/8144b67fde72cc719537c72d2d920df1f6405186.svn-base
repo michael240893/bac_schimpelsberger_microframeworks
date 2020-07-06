@@ -1,0 +1,9 @@
+package at.jku.se.bac.validation;
+
+
+@SuppressWarnings("serial")
+public class IncorrectOldPasswordException extends Throwable {
+	   public IncorrectOldPasswordException(final String message) {
+	        super(message);
+	    }
+}

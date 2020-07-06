@@ -1,0 +1,43 @@
+micronaut:
+  application:
+    name: bac-schimpelsberger-micronaut
+  server:
+    context-path: /api
+  security:
+    enabled: true
+#    token:
+ #     jwt:
+  #      enabled: true
+   #     signatures:
+    #      secret:
+     #       validation:
+      #        secret: asdf1234z##asdf79supersecretTestChange
+       #       base64: false
+        #      jws-algorithm: HS256
+  #      encryptions:
+  #         secret:
+  #          validation:
+  #            secret: asdf1234
+
+datasources:
+  default:
+    url: jdbc:postgresql://37.252.188.33:5432/application?ApplicationName=bac-schimpelsberger-micronaut
+    username: squirrel
+    password: squirrel
+    driverClassName: org.postgresql.Driver
+    connection-timeout: 20000
+    max-lifetime: 30000
+    idle-timeout: 10000 
+    maximum-pool-size: 10
+    minimum-idle: 1
+    auto-commit: true
+
+
+jpa:
+  default:
+    packages-to-scan:
+      - 'bac.schimpelsberger.micronaut' 
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: none

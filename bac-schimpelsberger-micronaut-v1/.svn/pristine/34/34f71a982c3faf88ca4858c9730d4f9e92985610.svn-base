@@ -1,0 +1,117 @@
+package bac.schimpelsberger.micronaut.controller;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import bac.schimpelsberger.micronaut.dto.AddUserDto;
+import bac.schimpelsberger.micronaut.dto.EditUserDto;
+import bac.schimpelsberger.micronaut.entity.Authority;
+import bac.schimpelsberger.micronaut.entity.User;
+import bac.schimpelsberger.micronaut.service.UserService;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.annotation.Body;
+import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
+import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.PathVariable;
+import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Put;
+import io.micronaut.http.annotation.QueryValue;
+import io.micronaut.http.exceptions.HttpStatusException;
+
+@Controller("/users")  
+public class UserController {
+
+	
+	//https://github.com/micronaut-projects/micronaut-data/blob/master/examples/example-jpa/pom.xml
+	
+	Logger log =LoggerFactory.getLogger(this.getClass());
+	  
+	protected final UserService service;
+
+		public UserController(UserService service) { 
+	    	this.service = service;
+	    }
+		
+		
+	    @Get
+	    public List<User> getUsers(@QueryValue Optional<String> name) {
+			log.info("getUsers was called with name: {}",name.orElse("NULL"));
+	    	List<User>users= service.findByNamePattern(name.orElse(""));
+	    	return users;
+	    }
+	    
+		@Post
+		public User addUser(@Valid @Body AddUserDto dto) {
+			log.info("addUser was called with AddUserDto: {}",dto);
+			dto.setEnabled(true);
+			User user=service.registerNewUserAccount(dto);
+			return user;
+		}
+	    
+	    @Get(value="/{no}") 
+	    public User getUser(Long no) {
+			log.info("getUser was called with no: {}",no);
+	        User user= service.findUserByNo(no);
+	        if (user!=null) {
+	        	return user;      
+	        }
+			else throw new HttpStatusException(HttpStatus.NOT_FOUND,"User not found");
+	    }
+	    
+		@Delete("/{no}")
+		public void deleteUser(Long no) {
+			log.info("deleteUser was called with no: {}",no);
+			service.deleteUser(no);
+			
+		}
+		
+		@Put("/{no}")
+		public User updateUser( Long no, @Valid @Body EditUserDto dto) {
+			dto.setNo(no);
+			log.info("updaeUser was called with EditUserDto: {}",dto);
+			User user=service.updateUserAccount(dto);
+			if (user==null)  throw new HttpStatusException(HttpStatus.NOT_FOUND,"User not found");
+			return user;
+		}
+		
+		@Get("/{no}/roles")
+		public Set<Authority>  getUserRoles( @PathVariable(name = "no") Long no) {
+			log.info("getUserRoles was called with no: {}",no);
+			User user=service.findUserByNo(no);
+			log.info("getUserRoles found user: {}",user);
+			if (user==null)  throw new HttpStatusException(HttpStatus.NOT_FOUND,"User nor found");
+			return service.findAuthoritiesOfUser(no);
+		}
+		
+//		@Post("/users/{no}/roles")
+//		public ResponseEntity<Set<Authority>>  addUserRoles(@PathVariable("no") Long no,@RequestBody List<Authority>authorities) {
+//			log.info("addUserRoles was called with no: {} for : authorities",no,authorities==null?"NULL":authorities.size());
+//			service.addUserRoles(no, authorities);
+//			return ResponseEntity.ok(null);
+//		}
+//		
+//		@DeleteMapping("/users/{no}/roles")
+//		public ResponseEntity<Set<Authority>>  deleteUserRoles(@PathVariable("no") Long no,@RequestBody List<Authority>authorities) {
+//			log.info("deleteUserRoles was called with no: {} for : authorities",no,authorities==null?"NULL":authorities.size());
+//			service.deleteUserRoles(no, authorities);
+//			return ResponseEntity.ok(null);
+//		}
+//
+//		@GetMapping("/users/{no}/unassignedRoles")
+//		public ResponseEntity<List<Authority>>  getUnassignedUserRoles(@PathVariable("no") Long no) {
+//			log.info("getUserRoles was called with no: {}",no);
+//			User user=service.findUserByNo(no);
+//			if (user==null)  throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+//			List<Authority>unassignedAuthorities=service.findUnassignedAuthorities(no);
+//			return ResponseEntity.ok(unassignedAuthorities);
+//		}
+	    
+	
+}

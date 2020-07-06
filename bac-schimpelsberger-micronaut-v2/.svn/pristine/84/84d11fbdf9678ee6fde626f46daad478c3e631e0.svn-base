@@ -1,0 +1,53 @@
+package bac.schimpelsberger.micronaut.security;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+import javax.inject.Singleton;
+
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+
+@Singleton
+public class JwtTokenUtil {
+	
+	private final SignatureAlgorithm signatureAlgorithm=SignatureAlgorithm.HS256;
+	
+	
+	private String secret="asdf1234";
+    
+
+	
+    public String getSubjectFromToken(String token) {
+        return getClaimFromToken(token, c->c.getSubject());
+    }
+    
+    public String getIssuerFromToken(String token) {
+        return getClaimFromToken(token, c->c.getIssuer());
+    }
+    
+
+    public Date getIssuedAtFromToken(String token) {
+        return getClaimFromToken(token, c->c.getIssuedAt());
+    }
+
+    public Date getExpirationFromToken(String token) {
+        return getClaimFromToken(token, c->c.getExpiration());
+    }
+    
+    private <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+    		final Claims claims = getAllClaimsFromToken(token);
+    		return claimsResolver.apply(claims);
+    }
+    
+    private Claims getAllClaimsFromToken(String token) {	
+        	Claims claims= Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        	return claims;
+    }
+    
+
+}
